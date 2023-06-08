@@ -27,7 +27,24 @@ async function run() {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
 
-    const classesCollection = client.db("music-school").collection("classes")
+    const classesCollection = client.db("music-school").collection("classes");
+    const usersCollection = client.db("music-school").collection("users");
+
+
+    // Users Collection (save users email, and role)
+    app.put("/users/:email", async(req, res)=>{
+        const email = req.params.email;
+        const user = req.body;
+        const query = {email: email};
+        const options = {upsert: true};
+        const updatedDoc = {
+            $set: user,
+        }
+        const result = await usersCollection.updateOne(query, updatedDoc, options)
+        console.log(result);
+        res.send(result);
+    })
+
 
     app.get("/classes", async(req, res)=>{
         const result = await classesCollection.find().toArray();

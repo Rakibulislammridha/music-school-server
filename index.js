@@ -27,7 +27,8 @@ async function run() {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
 
-    const classesCollection = client.db("music-school").collection("classes");
+    const classesCollection = client.db("music-school").collection("classes")
+    const subjectCollection = client.db("music-school").collection("subjects");
     const usersCollection = client.db("music-school").collection("users");
 
 
@@ -43,6 +44,19 @@ async function run() {
         const result = await usersCollection.updateOne(query, updatedDoc, options)
         console.log(result);
         res.send(result);
+    })
+
+    // Classes section 
+    app.get("/subjects", async(req, res)=>{
+        const result = await subjectCollection.find().toArray();
+        res.send(result);
+    })
+
+    app.post("/subjects", async(req, res)=>{
+        const subject = req.body;
+        console.log(subject);
+        const result = await subjectCollection.insertOne(subject);
+        res.send(result)
     })
 
 

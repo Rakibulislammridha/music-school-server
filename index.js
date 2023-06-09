@@ -84,6 +84,18 @@ async function run() {
         res.send(result);
     })
 
+    app.patch("/users/user/:id", async (req, res) =>{
+        const id = req.params.id;
+        const filter = {_id: new ObjectId(id)};
+        const updatedDoc = {
+            $set: {
+                role: "user"
+            },
+        }
+        const result = await usersCollection.updateOne(filter, updatedDoc)
+        res.send(result)
+    })
+
     // Classes section 
     app.get("/subjects", async(req, res)=>{
         const result = await subjectCollection.find().toArray();

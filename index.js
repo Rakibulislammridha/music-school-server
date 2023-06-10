@@ -30,6 +30,7 @@ async function run() {
     const classesCollection = client.db("music-school").collection("classes")
     const subjectCollection = client.db("music-school").collection("subjects");
     const usersCollection = client.db("music-school").collection("users");
+    const studentsSubjectsCollection = client.db("music-school").collection("selectedSubjects");
 
 
     // Users Collection (save users email, and set role)
@@ -115,6 +116,24 @@ async function run() {
         console.log(subject);
         const result = await subjectCollection.insertOne(subject);
         res.send(result)
+    })
+
+    // Student Selected subject collections
+    app.get("/selectedSubjects", async( req, res)=>{
+        const email = req.query.email;
+        if(!email){
+            res.send([])
+        }
+        const query = {email : email};
+        const result = await studentsSubjectsCollection.find(query).toArray();
+        res.send(result);
+    })
+
+    app.post("/selectedSubjects", async(req, res)=>{
+        const subject = req.body;
+        console.log(subject);
+        const result = await studentsSubjectsCollection.insertOne(subject);
+        res.send(result);
     })
 
 

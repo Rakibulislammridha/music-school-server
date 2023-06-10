@@ -84,6 +84,7 @@ async function run() {
         const result = await usersCollection.updateOne(filter, updatedDoc);
         res.send(result);
     })
+    // sat
 
     app.patch("/users/user/:id", async (req, res) =>{
         const id = req.params.id;
@@ -114,8 +115,20 @@ async function run() {
     app.post("/subjects", async(req, res)=>{
         const subject = req.body;
         console.log(subject);
-        const result = await subjectCollection.insertOne(subject);
+        const result = await subjectCollection.insertOne({...subject, status: "pending"});
         res.send(result)
+    })
+    
+    app.patch("/subjects/approved/:id", async( req, res)=>{
+        const id = req.params.id;
+        const filter = {_id: new ObjectId(id)};
+        const updatedDoc = {
+            $set:{
+                status: "approved"
+            }
+        }
+        const result = await subjectCollection.updateOne(filter, updatedDoc);
+        res.send(result);
     })
 
     // Student Selected subject collections
@@ -136,7 +149,7 @@ async function run() {
         res.send(result);
     })
 
-    app.delete("selectedSubjects/:id", async (req, res) =>{
+    app.delete("/selectedSubjects/:id", async (req, res) =>{
         const id = req.params.id;
         const query = {_id: new ObjectId(id)};
         const result = await studentsSubjectsCollection.deleteOne(query);

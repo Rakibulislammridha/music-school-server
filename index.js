@@ -1,6 +1,7 @@
 const express = require('express');
 const app = express();
 const cors = require('cors');
+const jwt = require('jsonwebtoken');
 require('dotenv').config()
 const port = process.env.port || 3000;
 
@@ -32,6 +33,11 @@ async function run() {
     const usersCollection = client.db("music-school").collection("users");
     const studentsSubjectsCollection = client.db("music-school").collection("selectedSubjects");
 
+    app.post("/jwt", (req, res)=>{
+        const user = req.body;
+        const token = jwt.sign(user, env.process.ACCESS_TOKEN_SECRET, { expiresIn: "1h"}); 
+        res.send({token});
+    })
 
     // Users Collection (save users email, and set role)
 
@@ -84,7 +90,6 @@ async function run() {
         const result = await usersCollection.updateOne(filter, updatedDoc);
         res.send(result);
     })
-    // sat
 
     app.patch("/users/user/:id", async (req, res) =>{
         const id = req.params.id;

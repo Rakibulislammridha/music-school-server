@@ -136,6 +136,13 @@ async function run() {
         res.send(result);
     })
 
+    app.delete("selectedSubjects/:id", async (req, res) =>{
+        const id = req.params.id;
+        const query = {_id: new ObjectId(id)};
+        const result = await studentsSubjectsCollection.deleteOne(query);
+        res.send(result);
+    })
+
 
     app.get("/classes", async(req, res)=>{
         const result = await classesCollection.find().toArray();

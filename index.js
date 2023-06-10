@@ -1,5 +1,6 @@
 const express = require('express');
 const app = express();
+const morgan = require('morgan')
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 require('dotenv').config()
@@ -8,8 +9,23 @@ const port = process.env.port || 3000;
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.use(morgan("dev"))
 
+const verifyJWT = (req, res, next)=>{
+  const authorization = req.headers.authorization;
+  if(!authorization){
+    return res.status(401).send({error: true, message: "unauthorized access"})
+  }
+  const token = authorization.split(" ")[1]
 
+  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) =>{
+    if(err){
+        return res.status(401).send({error: true, message: "unauthorized access"})
+    }
+    req.decoded = decoded;
+    next()
+  })
+}
 
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.3ztqljx.mongodb.net/?retryWrites=true&w=majority`;
@@ -35,7 +51,7 @@ async function run() {
 
     app.post("/jwt", (req, res)=>{
         const user = req.body;
-        const token = jwt.sign(user, env.process.ACCESS_TOKEN_SECRET, { expiresIn: "1h"}); 
+        const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "1h"}); 
         res.send({token});
     })
 
@@ -50,7 +66,6 @@ async function run() {
         const email = req.params.email;
         const query = {email: email};
         const result = await usersCollection.findOne(query);
-        console.log(result);
         res.send(result);
     })
 
@@ -113,13 +128,11 @@ async function run() {
         const email = req.params.email;
         const query = {"instructor.email": email};
         const result = await subjectCollection.find(query).toArray();
-        console.log(result);
         res.send(result);
     })
 
     app.post("/subjects", async(req, res)=>{
         const subject = req.body;
-        console.log(subject);
         const result = await subjectCollection.insertOne({...subject, status: "pending"});
         res.send(result)
     })
@@ -149,7 +162,6 @@ async function run() {
 
     app.post("/selectedSubjects", async(req, res)=>{
         const subject = req.body;
-        console.log(subject);
         const result = await studentsSubjectsCollection.insertOne(subject);
         res.send(result);
     })

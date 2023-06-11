@@ -11,6 +11,7 @@ app.use(cors());
 app.use(express.json());
 app.use(morgan("dev"))
 
+// JWT Verification
 const verifyJWT = (req, res, next)=>{
   const authorization = req.headers.authorization;
   if(!authorization){
@@ -78,6 +79,33 @@ async function run() {
             $set: user,
         }
         const result = await usersCollection.updateOne(query, updatedDoc, options)
+        res.send(result);
+    })
+
+    // verify user
+    app.get("/users/admin/:email", verifyJWT, async (req, res) =>{
+        const email = req.params.email;
+
+        if(req.decoded.email !== email){
+            res.send({admin: false})
+        }
+
+        const query = {email: email}
+        const user = await usersCollection.findOne(query);
+        const result = {admin: user?.role === "admin"}
+        res.send(result);
+    })
+
+    app.get("/users/instructor/:email", verifyJWT, async (req, res)=>{
+        const email = req.params.email;
+
+        if(req.decoded.email !== email){
+            res.send({instructor: false})
+        }
+
+        const query = {email: email};
+        const user = await usersCollection.findOne(query);
+        const result = {instructor: user?.role === "instructor"}
         res.send(result);
     })
 
@@ -150,10 +178,14 @@ async function run() {
     })
 
     // Student Selected subject collections
-    app.get("/selectedSubjects", async( req, res)=>{
+    app.get("/selectedSubjects", verifyJWT, async( req, res)=>{
         const email = req.query.email;
         if(!email){
             res.send([])
+        }
+        const decodedEmail = req.decoded.email;
+        if(email !== decodedEmail){
+            return res.status(403).send({error: true, message: "forbidden access"})
         }
         const query = {email : email};
         const result = await studentsSubjectsCollection.find(query).toArray();

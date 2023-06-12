@@ -284,13 +284,6 @@ async function run() {
         res.send({result});
     })
 
-    // app.get("/subjects/:email", async (req, res) =>{
-    //     const email = req.params.email;
-    //     const query = {"instructor.email": email};
-    //     const result = await subjectCollection.find(query).toArray();
-    //     res.send(result);
-    // })
-
     app.get("/payments/:email", async (req, res) =>{
         const email = req.params.email;
         let sort = {}

@@ -49,7 +49,7 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    // await client.connect();
 
     const classesCollection = client.db("music-school").collection("classes")
     const subjectCollection = client.db("music-school").collection("subjects");
@@ -86,7 +86,7 @@ async function run() {
 
     // Users Collection (save users email, and set role)
 
-    app.get("/users", async (req, res)=>{
+    app.get("/users", verifyJWT, async (req, res)=>{
         const result = await usersCollection.find().toArray();
         res.send(result);
     })
@@ -96,8 +96,13 @@ async function run() {
         res.send(result);
     })
 
+    app.get("/users/popularInstructors", async (req, res) => {
+        const result = await usersCollection.find({role: "instructor"}).limit(6).toArray()
+        res.send(result)
+    })
 
-    app.get("/users/:email", async(req, res)=>{
+
+    app.get("/users/:email", verifyJWT, async(req, res)=>{
         const email = req.params.email;
         const query = {email: email};
         const result = await usersCollection.findOne(query);
@@ -125,7 +130,7 @@ async function run() {
         res.send(result);
     })
 
-    app.get("/users/instructor/:email", async (req, res)=>{
+    app.get("/users/instructor/:email", verifyJWT, async (req, res)=>{
         const email = req.params.email;
         const query = {email: email};
         const user = await usersCollection.findOne(query);
@@ -171,6 +176,12 @@ async function run() {
         res.send(result);
     })
 
+    app.get("/popularSubjects", async (req, res) =>{
+        const query = {status: "approved"}
+        const result = await subjectCollection.find(query).sort({enrolled: -1}).limit(6).toArray();
+        res.send(result);
+    })
+
     app.post("/subjects", async(req, res)=>{
         const subject = req.body;
         const result = await subjectCollection.insertOne({...subject, status: "pending"});
@@ -180,9 +191,6 @@ async function run() {
     app.post("/subjects/reject/:id", async (req, res) =>{
         const id = req.params.id;
         const {feedback} = req.body;
-
-        // await subjectCollection.deleteOne({_id: new ObjectId(id)});
-
         const filter = {_id: new ObjectId(id)}
         const updatedDoc = {
             $set:{
@@ -266,7 +274,7 @@ async function run() {
     app.post("/payments", verifyJWT, async (req, res) =>{
         const payment = req.body;
 
-        // delete selcted course
+        // delete selected course
         await studentsSubjectsCollection.deleteOne({_id: new ObjectId(payment.selectedClassId)});
 
 
@@ -274,6 +282,7 @@ async function run() {
         const updatedDoc = {
             $set: {
                 availableSits: payment.availableSits,
+                enrolledStudents: payment.enrolledStudents,
             },
         };
         await subjectCollection.updateOne(filter, updatedDoc);
@@ -292,11 +301,6 @@ async function run() {
         }
         const query = {email: email};
         const result = await paymentCollection.find(query).sort(sort).toArray();
-        res.send(result);
-    })
-
-    app.get("/classes", async(req, res)=>{
-        const result = await classesCollection.find().toArray();
         res.send(result);
     })
 

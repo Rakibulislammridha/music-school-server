@@ -51,7 +51,6 @@ async function run() {
     // Connect the client to the server	(optional starting in v4.7)
     // await client.connect();
 
-    const classesCollection = client.db("music-school").collection("classes")
     const subjectCollection = client.db("music-school").collection("subjects");
     const usersCollection = client.db("music-school").collection("users");
     const studentsSubjectsCollection = client.db("music-school").collection("selectedSubjects");
@@ -138,9 +137,8 @@ async function run() {
         res.send(result);
     })
 
-    app.patch("/users/admin/:id", async(req, res) =>{
+    app.patch("/users/admin/:id", verifyJWT, async(req, res) =>{
         const id = req.params.id;
-        console.log(id);
         const filter = {_id: new ObjectId(id)};
         const updatedDoc = {
             $set: {
@@ -151,7 +149,7 @@ async function run() {
         res.send(result);
     })
 
-    app.patch("/users/instructor/:id", async(req, res)=>{
+    app.patch("/users/instructor/:id",verifyJWT, async(req, res)=>{
         const id = req.params.id;
         const filter = {_id: new ObjectId(id)};
         const updatedDoc = {
